@@ -8,8 +8,10 @@
 int main() {
     BINT_t *op1, *op2, *rst;
 
-    while ((op1 = BintGet("第一个操作数")) == NULL);
-    while ((op2 = BintGet("第二个操作数")) == NULL);
+//    while ((op1 = BintGet("第一个操作数")) == NULL);
+//    while ((op2 = BintGet("第二个操作数")) == NULL);
+    op1 = MakeNum("123");
+    op2 = MakeNum("2.3");
 
     rst = Bint_ADD(op1, op2);
     printf("加法结果：");
@@ -20,7 +22,7 @@ int main() {
     rst = Bint_MUL(op1, op2);
     printf("乘法结果：");
     BintShow(rst);
-    rst = Bint_DIV(op1, op2, 20);
+    rst = Bint_DIV(op1, op2, 40);
     printf("除法结果：");
     BintShow(rst);
 

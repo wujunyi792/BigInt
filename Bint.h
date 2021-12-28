@@ -41,6 +41,7 @@ typedef struct intSave {
 *******************************************************************/
 //交互  
 BINT_t *Bint_input(char hint[]);
+BINT_t *MakeNum(char str[]);
 
 void Bint_output(BINT_t *Bint);
 
@@ -108,6 +109,77 @@ BINT_t *Bint_input(char hint[]) {
     while (*p != '\0') {
         if (*p > ASCII_NUM_9 || (*p < ASCII_NUM_0 && *p != ASCII_NUM_POINTER)) {
             printf(":::输入错误 非数字\n");
+            free(ret);
+            return NULL;
+        } else if (*p == ASCII_NUM_0 && begin_flag) {
+            p++;
+            continue;
+        } else {
+            if (*p == '.') {
+                havePointer = 1;
+                p++;
+                continue;
+            }
+            begin_flag = 0;
+            ret->numer[len_cnt] = Fix(*p);
+            if (havePointer)ret->point++;
+            p++;
+            len_cnt++;
+        }
+    }
+    //全为0
+    if (*p == '\0' && begin_flag == 1) {
+        ret->numer[0] = 0;
+        ret->len = len_cnt = 1;
+    }
+
+    //置len位
+    ret->len = len_cnt;
+    ret->offset = 0;
+
+    //设置剩余的为0x88 -120
+    memset(&(ret->numer[len_cnt]), NOT_NUM, MAX_BIT_LEN - len_cnt);
+
+    return ret;
+}
+
+
+/******************************************************
+* Des: 从字符串解析一个大数结构
+ * @Argu 字符串 [要解析的字符串]
+* Returns:指针  大整数结构
+*******************************************************/
+BINT_t *MakeNum(char str[]) {
+    //输入的缓存
+    char input[MAX_BIT_LEN + 1];
+
+    //大数结构数组
+    BINT_t *ret = (BINT_t *) malloc(sizeof(BINT_t));
+    ret->point = 0;
+
+    //游标  计算长度
+    char *p = str;
+
+    /*符号判断*/
+    switch (*p) {
+        case '-':
+            ret->sign = NEG;
+            p++;
+            break;
+        case '+':
+            ret->sign = POS;
+            p++;
+            break;
+        default:
+            ret->sign = POS;
+    }
+    /*计算长度并赋值*/
+    int len_cnt = 0;
+    char begin_flag = 1;
+    int havePointer = 0;
+    while (*p != '\0') {
+        if (*p > ASCII_NUM_9 || (*p < ASCII_NUM_0 && *p != ASCII_NUM_POINTER)) {
+            printf(":::err input\n");
             free(ret);
             return NULL;
         } else if (*p == ASCII_NUM_0 && begin_flag) {
@@ -340,7 +412,7 @@ BINT_t *Bint_ADD(BINT_t *op1, BINT_t *op2) {
             op2->len++;
             op2->point++;
         }
-    } else if (op1->len < op2->len) {
+    } else if (op1->point < op2->point) {
         unsigned long long gap = offset = op2->point - op1->point;
         op1->offset = 1;
         for (int i = 0; i < gap; ++i) {
@@ -402,7 +474,7 @@ BINT_t *Bint_SUB(BINT_t *op1, BINT_t *op2) {
             op2->len++;
             op2->point++;
         }
-    } else if (op1->len < op2->len) {
+    } else if (op1->point < op2->point) {
         unsigned long long gap = offset = op2->point - op1->point;
         op1->offset = 1;
         for (int i = 0; i < gap; ++i) {
