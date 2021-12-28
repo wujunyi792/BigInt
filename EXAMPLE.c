@@ -6,25 +6,25 @@
  ************************************/
 
 int main() {
-    BINT_t *op1, *op2, *rst;
+    BigNum *op1, *op2, *rst;
 
-//    while ((op1 = BintGet("第一个操作数")) == NULL);
+//    while ((op1 = MakeNumFromIO()) == NULL);
 //    while ((op2 = BintGet("第二个操作数")) == NULL);
-    op1 = MakeNum("123");
-    op2 = MakeNum("2.3");
+    op1 = MakeNum("-123.2");
+    op2 = MakeNum("124");
 
-    rst = Bint_ADD(op1, op2);
+    rst = BigNum_ADD(op1, op2);
     printf("加法结果：");
-    BintShow(rst);
-    rst = Bint_SUB(op1, op2);
+    ShowNum(rst);
+    rst = BigNum_SUB(op1, op2);
     printf("减法结果：");
-    BintShow(rst);
-    rst = Bint_MUL(op1, op2);
+    ShowNum(rst);
+    rst = BigNum_MUL(op1, op2);
     printf("乘法结果：");
-    BintShow(rst);
-    rst = Bint_DIV(op1, op2, 40);
+    ShowNum(rst);
+    rst = BigNum_DIV(op1, op2, 40);
     printf("除法结果：");
-    BintShow(rst);
+    ShowNum(rst);
 
     return 0;
 }

@@ -1,89 +1,65 @@
-# include<stdio.h>
-# include<stdlib.h>
-# include<string.h>
-# include<math.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <math.h>
 # include <assert.h>
 
-/******************************************************************
- 关于 使用char表示一个十进制数有关的一些宏定义 
-*******************************************************************/
-
+/**
+ * num -> char 相关定义
+ */
 #define ASCII_NUM_9 57
 #define ASCII_NUM_0 48
-#define ASCII_NUM_POINTER 46
+#define ASCII_NUM_POINTER 46  //小数点
 #define POS  1
 #define NEG  0
 #define  Fix(n) ((n)-ASCII_NUM_0)
 #define NOT_NUM 0x88
 
-/******************************************************************
- 一个大整数最长的位数 
-*******************************************************************/
+/**
+ * 定义最长字符串长度支持
+ */
 #ifndef MAX_BIT_LEN
 #define MAX_BIT_LEN 500
 #endif
 
-/******************************************************************
-  数据结构定义 
-*******************************************************************/
+/**
+ * 大数结构体定义
+ */
 typedef char bitDec;
-
-typedef struct intSave {
-    bitDec numer[MAX_BIT_LEN * 2 + 1];//十进制数字
+typedef struct numberStr {
+    bitDec numer[MAX_BIT_LEN * 2 + 1];//十进制数字, *2-1防止相乘溢出
     char sign;//符号位
     unsigned long long point; //小数点位置
     unsigned long long len; //长度
     int offset; //是否有扩零
-} BINT_t;
+} BigNum;
 
-/******************************************************************
- 函数声明 
-*******************************************************************/
-//交互  
-BINT_t *Bint_input(char hint[]);
-BINT_t *MakeNum(char str[]);
-
-void Bint_output(BINT_t *Bint);
-
-//简化使用定义 
-#define BintGet(c)  (Bint_input((c)))
-#define BintShow(b)  (Bint_output((b)))
-
-//无符号加减 
-BINT_t *Bint_Unsigned_ADD(BINT_t *op1, BINT_t *op2);
-
-BINT_t *Bint_Unsigned_SUB(BINT_t *op1, BINT_t *op2);
-
-//有符号加减
-BINT_t *Bint_ADD(BINT_t *op1, BINT_t *op2);
-
-BINT_t *Bint_SUB(BINT_t *op1, BINT_t *op2);
-
-//乘法 除法 
-BINT_t *Bint_MUL(BINT_t *op1, BINT_t *op2);
-
-BINT_t *Bint_DIV(BINT_t *op1, BINT_t *op2, unsigned long long int tail);
+void ShowNum(BigNum *BigNum);
+BigNum *MakeNumFromIO();
+BigNum *MakeNum(char str[]);
+BigNum *BigNum_ADD(BigNum *op1, BigNum *op2);
+BigNum *BigNum_SUB(BigNum *op1, BigNum *op2);
+BigNum *BigNum_MUL(BigNum *op1, BigNum *op2);
+BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, unsigned long long int tail);
+BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2); //不由外部调用
+BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2); //不由外部调用
 
 
-//////////////////////////////////具体函数//////////////////////////////////////
-//               包括 无符号加减 有符号加减 乘除 模余                        // 
-/////////////////////////////////////////////////////////////////////////////// 
-
-/******************************************************
-* Des: 从用户输入获得一个大整数结构 
-* @Argu:字符串 [提示信息] 
-* Returns:指针  大整数结构 
-*******************************************************/
-BINT_t *Bint_input(char hint[]) {
+/**
+ * Des: 从用户输入生成一个大数结构
+ * @Argu:字符串 [提示信息] 
+ * Returns:指针  大数结构
+ */
+BigNum *MakeNumFromIO() {
     //输入的缓存 
     char input[MAX_BIT_LEN + 1];
 
     //大数结构数组
-    BINT_t *ret = (BINT_t *) malloc(sizeof(BINT_t));
+    BigNum *ret = (BigNum *) malloc(sizeof(BigNum));
     ret->point = 0;
 
     //交互
-    printf("[%s] 请输入一个大数(%d位以内)\n", hint, MAX_BIT_LEN);
+    printf("[%s] 请输入一个大数(%d位以内)\n", "操作数", MAX_BIT_LEN);
     scanf("%s", input);
 
     //游标  计算长度
@@ -144,17 +120,17 @@ BINT_t *Bint_input(char hint[]) {
 }
 
 
-/******************************************************
-* Des: 从字符串解析一个大数结构
+/**
+ * Des: 从字符串解析一个大数结构
  * @Argu 字符串 [要解析的字符串]
-* Returns:指针  大整数结构
-*******************************************************/
-BINT_t *MakeNum(char str[]) {
+ * Returns:指针  大数结构
+ */
+BigNum *MakeNum(char str[]) {
     //输入的缓存
     char input[MAX_BIT_LEN + 1];
 
     //大数结构数组
-    BINT_t *ret = (BINT_t *) malloc(sizeof(BINT_t));
+    BigNum *ret = (BigNum *) malloc(sizeof(BigNum));
     ret->point = 0;
 
     //游标  计算长度
@@ -215,48 +191,47 @@ BINT_t *MakeNum(char str[]) {
 }
 
 
-/******************************************************
-* Des: 把BINT转化为数字形式输出 
-* @Argu:BINT_t* 要输出的数字 
-* @Returns:void 
-*******************************************************/
-void Bint_output(BINT_t *Bint) {
+/**
+ * 数字输出
+ * @param BigNum 要输出的数字
+ */
+void ShowNum(BigNum *BigNum) {
 
-    if (Bint->sign == NEG) {
+    if (BigNum->sign == NEG) {
         printf("-");
     }
     long long i;
-    int havePointer = Bint->point != -1;
-    if (Bint->len <= Bint->point) {
+    int havePointer = BigNum->point != -1;
+    if (BigNum->len <= BigNum->point) {
         printf("0.");
-        for (int j = 0; j < Bint->point - Bint->len; ++j) {
+        for (int j = 0; j < BigNum->point - BigNum->len; ++j) {
             printf("0");
         }
         havePointer = 0;
     }
 
-    for (i = 0; i < Bint->len; i++) {
-        if (i == Bint->len - Bint->point && havePointer) {
+    for (i = 0; i < BigNum->len; i++) {
+        if (i == BigNum->len - BigNum->point && havePointer) {
             printf(".");
             havePointer = 0;
             i--;
             continue;
         }
-        printf("%d", Bint->numer[i]);
+        printf("%d", BigNum->numer[i]);
     }
 
     printf("\n");
 }
 
-/******************************************************
-* Des: 无符号的加法 
-* @Argu:BINT_t* 加数
-*       BINT_t* 加数 
-* @Returns: BINT* 相加后的结果 sign 默认为正  
-*******************************************************/
-BINT_t *Bint_Unsigned_ADD(BINT_t *op1, BINT_t *op2) {
+/**
+ * 底层无符号加法
+ * @param op1 加数1
+ * @param op2 加数2
+ * @return 运算结果
+ */
+BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2) {
     unsigned long long maxLen, rstLen, gap;
-    BINT_t *rst, *L, *S;
+    BigNum *rst, *L, *S;
     bitDec *output;
 
     assert(op1 != NULL && op2 != NULL);
@@ -270,7 +245,7 @@ BINT_t *Bint_Unsigned_ADD(BINT_t *op1, BINT_t *op2) {
     S = maxLen == op1->len ? op2 : op1;
 
     //结果 结构
-    rst = (BINT_t *) malloc(sizeof(BINT_t));
+    rst = (BigNum *) malloc(sizeof(BigNum));
 
 
     //结果缓存数组 留一位作为进位预留
@@ -316,14 +291,15 @@ BINT_t *Bint_Unsigned_ADD(BINT_t *op1, BINT_t *op2) {
     return rst;
 }
 
-/******************************************************
-* Des: 无符号 减法 
-* @Argu:BINT_t* op1被减数 op2减数 
-* @Returns:BINT_t 相加后的结果  符号位依据结果而定 
-*******************************************************/
-BINT_t *Bint_Unsigned_SUB(BINT_t *op1, BINT_t *op2) {
+/**
+ * 底层无符号减法
+ * @param op1 被减数1
+ * @param op2 减数2
+ * @return 运算结果
+ */
+BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2) {
     unsigned long long maxLen = 0, gap, Zero_cnt = 0;
-    BINT_t *rst, *L, *S;
+    BigNum *rst, *L, *S;
     bitDec *output;
 
     assert(op1 != NULL && op2 != NULL);
@@ -337,7 +313,7 @@ BINT_t *Bint_Unsigned_SUB(BINT_t *op1, BINT_t *op2) {
     S = maxLen == op1->len ? op2 : op1;
 
     //结果 结构
-    rst = (BINT_t *) malloc(sizeof(BINT_t));
+    rst = (BigNum *) malloc(sizeof(BigNum));
 
     //结果缓存数组
     output = (bitDec *) malloc(sizeof(bitDec) * (maxLen));
@@ -390,14 +366,14 @@ BINT_t *Bint_Unsigned_SUB(BINT_t *op1, BINT_t *op2) {
 }
 
 
-/******************************************************
-* Des: 带符号 大整数加法 
-* @Argu: BINT_t* 
-*        BINT_t* 要相加的两个大整数 
-* @Returns: BINT_t* 加后的结果 
-*******************************************************/
-BINT_t *Bint_ADD(BINT_t *op1, BINT_t *op2) {
-    BINT_t *rst;
+/**
+ * 整数加法（小数点处理，调用底层运算）
+ * @param op1 加数1
+ * @param op2 加数2
+ * @return 运算结果
+ */
+BigNum *BigNum_ADD(BigNum *op1, BigNum *op2) {
+    BigNum *rst;
 
     assert(op1 != NULL && op2 != NULL);
 
@@ -424,13 +400,13 @@ BINT_t *Bint_ADD(BINT_t *op1, BINT_t *op2) {
 
 
     if (op1->sign == POS && op2->sign == POS) {
-        rst = Bint_Unsigned_ADD(op1, op2);
+        rst = BigNum_Unsigned_ADD(op1, op2);
     } else if (op1->sign == POS && op2->sign == NEG) {
-        rst = Bint_Unsigned_SUB(op1, op2);
+        rst = BigNum_Unsigned_SUB(op1, op2);
     } else if (op1->sign == NEG && op2->sign == POS) {
-        rst = Bint_Unsigned_SUB(op2, op1);
+        rst = BigNum_Unsigned_SUB(op2, op1);
     } else if (op1->sign == NEG && op2->sign == NEG) {
-        rst = Bint_Unsigned_ADD(op1, op2);
+        rst = BigNum_Unsigned_ADD(op1, op2);
         rst->sign = NEG;
     }
 
@@ -450,18 +426,18 @@ BINT_t *Bint_ADD(BINT_t *op1, BINT_t *op2) {
         op2->point -= offset;
         op2->offset = 0;
     }
-
+    rst->offset = 0;
     return rst;
 }
 
-/******************************************************
-* Des: 大整数减法  op1-op2 
-* @Argu: BINT_t* 被减数
-*        BINT_t* 减数 
-* @Returns:BINT_t* 结果 
-*******************************************************/
-BINT_t *Bint_SUB(BINT_t *op1, BINT_t *op2) {
-    BINT_t *rst;
+/**
+ * 大数减法（小数点处理，调用底层运算）
+ * @param op1 被减数
+ * @param op2 减数
+ * @return 运算结果
+ */
+BigNum *BigNum_SUB(BigNum *op1, BigNum *op2) {
+    BigNum *rst;
 
     assert(op1 != NULL && op2 != NULL);
 
@@ -488,23 +464,23 @@ BINT_t *Bint_SUB(BINT_t *op1, BINT_t *op2) {
         int tmp = 0;
         for (unsigned long long i = 0; i < op1->len; ++i) {
             if (op1->numer[i] > op2->numer[i]) {
-                rst = Bint_Unsigned_SUB(op1, op2);
+                rst = BigNum_Unsigned_SUB(op1, op2);
                 rst->sign = 1;
                 tmp = 1;
                 break;
             }
         }
         if (!tmp) {
-            rst = Bint_Unsigned_SUB(op2, op1);
+            rst = BigNum_Unsigned_SUB(op2, op1);
             rst->sign = 0;
         }
     } else if (op1->sign == POS && op2->sign == NEG) {
-        rst = Bint_Unsigned_ADD(op1, op2);
+        rst = BigNum_Unsigned_ADD(op1, op2);
     } else if (op1->sign == NEG && op2->sign == POS) {
-        rst = Bint_Unsigned_ADD(op1, op2);
+        rst = BigNum_Unsigned_ADD(op1, op2);
         rst->sign = NEG;
     } else if (op1->sign == NEG && op2->sign == NEG) {
-        rst = Bint_Unsigned_SUB(op2, op1);
+        rst = BigNum_Unsigned_SUB(op2, op1);
     }
 
 
@@ -523,17 +499,19 @@ BINT_t *Bint_SUB(BINT_t *op1, BINT_t *op2) {
         op2->point -= offset;
         op2->offset = 0;
     }
+    rst->offset = 0;
     return rst;
 }
 
-/******************************************************
-* Des: 大整数乘法 
-* @Argu: BINT_t* op1 op2 两个乘数 
-* @Returns:BINT_t* 乘法结果 
-*******************************************************/
-BINT_t *Bint_MUL(BINT_t *op1, BINT_t *op2) {
+/**
+ * 大数乘法
+ * @param op1 乘数1
+ * @param op2 乘数2
+ * @return 运算结果
+ */
+BigNum *BigNum_MUL(BigNum *op1, BigNum *op2) {
     unsigned long long maxLen, minLen, rstLen;
-    BINT_t *rst, *L, *S;
+    BigNum *rst, *L, *S;
     bitDec *output;
     long long i, j;
 
@@ -552,7 +530,7 @@ BINT_t *Bint_MUL(BINT_t *op1, BINT_t *op2) {
     S = maxLen == op1->len ? op2 : op1;
 
     //结果 结构
-    rst = (BINT_t *) malloc(sizeof(BINT_t));
+    rst = (BigNum *) malloc(sizeof(BigNum));
 
     //结果缓存数组
     output = (bitDec *) malloc(sizeof(bitDec) * (rstLen));
@@ -594,14 +572,16 @@ BINT_t *Bint_MUL(BINT_t *op1, BINT_t *op2) {
     return rst;
 }
 
-/******************************************************
-* Des: 大整数除法 
-* @Argu: BINT_t* op1[被除数]   op2[除数]   
-* @Returns:BINT_t*  结果  取整 
-*******************************************************/
-BINT_t *Bint_DIV(BINT_t *op1, BINT_t *op2, unsigned long long int tail) {
+/**
+ * 大数除法
+ * @param op1 被除数
+ * @param op2 除数
+ * @param tail 最少的保留位数
+ * @return 运算结果
+ */
+BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, unsigned long long int tail) {
     unsigned long long rstLen, len1, len2;
-    BINT_t *rst;
+    BigNum *rst;
     bitDec *output, *subc;
     long long i, j, k;
     char s0_flag = 0;
@@ -623,7 +603,7 @@ BINT_t *Bint_DIV(BINT_t *op1, BINT_t *op2, unsigned long long int tail) {
     len2 = op2->len;
 
     //结果 结构 
-    rst = (BINT_t *) malloc(sizeof(BINT_t));
+    rst = (BigNum *) malloc(sizeof(BigNum));
 
     //结果缓存数组
     output = (bitDec *) malloc(sizeof(bitDec) * (rstLen));
