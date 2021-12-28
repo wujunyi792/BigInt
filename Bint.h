@@ -26,6 +26,7 @@
  * 大数结构体定义
  */
 typedef char bitDec;
+typedef unsigned long long int VeryLongInt;
 typedef struct numberStr {
     bitDec numer[MAX_BIT_LEN * 2 + 1];//十进制数字, *2-1防止相乘溢出
     char sign;//符号位
@@ -35,12 +36,19 @@ typedef struct numberStr {
 } BigNum;
 
 void ShowNum(BigNum *BigNum);
+
 BigNum *MakeNumFromIO();
+
 BigNum *MakeNum(char str[]);
+
 BigNum *BigNum_ADD(BigNum *op1, BigNum *op2);
+
 BigNum *BigNum_SUB(BigNum *op1, BigNum *op2);
+
 BigNum *BigNum_MUL(BigNum *op1, BigNum *op2);
-BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, unsigned long long int tail);
+
+BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, VeryLongInt tail);
+
 BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2); //不由外部调用
 BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2); //不由外部调用
 
@@ -286,7 +294,7 @@ BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2) {
     rst->len = rstLen;
 
     //释放局部资源
-//	free(output);
+//    free(output);
 
     return rst;
 }
@@ -378,7 +386,7 @@ BigNum *BigNum_ADD(BigNum *op1, BigNum *op2) {
     assert(op1 != NULL && op2 != NULL);
 
     // 小数点对齐
-    unsigned long long int offset = 0;
+    VeryLongInt offset = 0;
 
     if (op1->point > op2->point) {
         unsigned long long gap = offset = op1->point - op2->point;
@@ -441,7 +449,7 @@ BigNum *BigNum_SUB(BigNum *op1, BigNum *op2) {
 
     assert(op1 != NULL && op2 != NULL);
 
-    unsigned long long int offset = 0;
+    VeryLongInt offset = 0;
     if (op1->point > op2->point) {
         unsigned long long gap = offset = op1->point - op2->point;
         op2->offset = 1;
@@ -567,8 +575,8 @@ BigNum *BigNum_MUL(BigNum *op1, BigNum *op2) {
     //释放局部资源
 //	free(output);
 
-
     rst->point = op1->point + op2->point;
+
     return rst;
 }
 
@@ -579,7 +587,7 @@ BigNum *BigNum_MUL(BigNum *op1, BigNum *op2) {
  * @param tail 最少的保留位数
  * @return 运算结果
  */
-BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, unsigned long long int tail) {
+BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, VeryLongInt tail) {
     unsigned long long rstLen, len1, len2;
     BigNum *rst;
     bitDec *output, *subc;
@@ -681,6 +689,12 @@ BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, unsigned long long int tail) {
 //	free(subc);
 
     rst->point = op1->point - op2->point;
+
+    for (unsigned long long kk = 0; kk < max; kk++) {
+        op1->numer[op1->len] = ASCII_NUM_POINTER;
+        op1->len--;
+        op1->point--;
+    }
 
     return rst;
 }

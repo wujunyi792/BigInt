@@ -1,17 +1,23 @@
-#include"Bint.h"
+# define MAX_BIT_LEN 1000
 
-/*************************************
- 这里可以定义自己的最长位数
- #define MAX_BIT_LEN  XXX
- ************************************/
+#include"Bint.h"
 
 int main() {
     BigNum *op1, *op2, *rst;
 
-//    while ((op1 = MakeNumFromIO()) == NULL);
-//    while ((op2 = BintGet("第二个操作数")) == NULL);
-    op1 = MakeNum("-123.2");
-    op2 = MakeNum("124");
+    printf("////////////   演示示例   ///////////////\n");
+
+    while ((op1 = MakeNumFromIO()) == NULL);
+//    op1 = MakeNum("100");
+    while ((op2 = MakeNumFromIO()) == NULL);
+//    op2 = MakeNum("10");
+
+    printf("操作数 op1=");
+    ShowNum(op1);
+    printf("\n操作数 op2=");
+    ShowNum(op2);
+    printf("\n\n");
+
 
     rst = BigNum_ADD(op1, op2);
     printf("加法结果：");
@@ -25,6 +31,11 @@ int main() {
     rst = BigNum_DIV(op1, op2, 40);
     printf("除法结果：");
     ShowNum(rst);
+
+    printf("\n\n支持连环调用, 演示 op1 * op2 - 2\n");
+    rst = BigNum_SUB(BigNum_MUL(op1, op2), MakeNum("2"));
+    ShowNum(rst);
+
 
     return 0;
 }
