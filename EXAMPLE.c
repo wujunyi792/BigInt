@@ -14,9 +14,9 @@ int main() {
 
     printf("操作数 op1=");
     ShowNum(op1);
-    printf("\n操作数 op2=");
+    printf("操作数 op2=");
     ShowNum(op2);
-    printf("\n\n");
+    printf("\n");
 
 
     rst = BigNum_ADD(op1, op2);
