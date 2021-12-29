@@ -26,7 +26,7 @@
  * 大数结构体定义
  */
 typedef char bitDec;
-typedef unsigned long long int VeryLongInt;
+typedef unsigned long long int VeryLongInt; //内部计算时会用到，避免每次都写一边 unsigned long long int
 typedef struct numberStr {
     bitDec numer[MAX_BIT_LEN * 2 + 1];//十进制数字, *2-1防止相乘溢出
     char sign;//符号位
@@ -49,8 +49,13 @@ BigNum *BigNum_MUL(BigNum *op1, BigNum *op2);
 
 BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, VeryLongInt tail);
 
-BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2); //不由外部调用
-BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2); //不由外部调用
+BigNum *BigNum_Unsigned_ADD(BigNum *op1, BigNum *op2);
+
+BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2);
+
+BigNum *Clear(BigNum *BigNum);
+
+int Compare(BigNum *op1, BigNum *op2);
 
 
 /**
@@ -127,7 +132,6 @@ BigNum *MakeNumFromIO() {
     return ret;
 }
 
-
 /**
  * Des: 从字符串解析一个大数结构
  * @Argu 字符串 [要解析的字符串]
@@ -198,12 +202,20 @@ BigNum *MakeNum(char str[]) {
     return ret;
 }
 
-
 /**
  * 数字输出
  * @param BigNum 要输出的数字
  */
 void ShowNum(BigNum *BigNum) {
+
+    // 去除小数点
+    while (BigNum->point > 0 && BigNum->numer[BigNum->len - 1] == 0) {
+        BigNum->numer[BigNum->len - 1] = NOT_NUM;
+        BigNum->point--;
+        BigNum->len--;
+    }
+    if (BigNum->len == 1 && BigNum->numer[0] == 0)
+        BigNum->sign = POS;
 
     if (BigNum->sign == NEG) {
         printf("-");
@@ -372,7 +384,6 @@ BigNum *BigNum_Unsigned_SUB(BigNum *op1, BigNum *op2) {
 
     return rst;
 }
-
 
 /**
  * 整数加法（小数点处理，调用底层运算）
@@ -689,12 +700,44 @@ BigNum *BigNum_DIV(BigNum *op1, BigNum *op2, VeryLongInt tail) {
 //	free(subc);
 
     rst->point = op1->point - op2->point;
-
+    rst->offset = 0;
     for (unsigned long long kk = 0; kk < max; kk++) {
-        op1->numer[op1->len] = ASCII_NUM_POINTER;
+        op1->numer[op1->len - 1] = NOT_NUM;
         op1->len--;
         op1->point--;
     }
 
     return rst;
+}
+
+/**
+ * 清理小数点后无用0
+ * @param BigNum 需要清洗的数据
+ * @return 原数据结构
+ */
+BigNum *Clear(BigNum *BigNum) {
+    while (BigNum->point > 0 && BigNum->numer[BigNum->len - 1] == 0) {
+        BigNum->numer[BigNum->len - 1] = NOT_NUM;
+        BigNum->point--;
+        BigNum->len--;
+    }
+    if (BigNum->len == 1 && BigNum->numer[0] == 0)
+        BigNum->sign = POS;
+    return BigNum;
+}
+
+/**
+ * 两数比较
+ * @param op1 比较数1
+ * @param op2 比较数2
+ * @return 1 op1>op2 0 op1=op2 -1 op1<op2
+ */
+int Compare(BigNum *op1, BigNum *op2) {
+    BigNum *rst = BigNum_SUB(op1, op2);
+    rst = Clear(rst);
+    if (rst->sign == NEG)return -1;
+    else {
+        if (rst->len == 1 && rst->numer[0] == 0)return 0;
+        else return 1;
+    }
 }
