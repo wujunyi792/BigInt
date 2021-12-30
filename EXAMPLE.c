@@ -7,10 +7,11 @@ int main() {
 
     printf("////////////   演示示例   ///////////////\n");
 
-//    while ((op1 = MakeNumFromIO()) == NULL);
-    op1 = MakeNum("100.3");
-//    while ((op2 = MakeNumFromIO()) == NULL);
-    op2 = MakeNum("-66");
+    while ((op1 = MakeNumFromIO()) == NULL);
+//    op1 = MakeNum("10000000000.3");
+    while ((op2 = MakeNumFromIO()) == NULL);
+//    op2 = MakeNum("-66.79.3");
+
 
     printf("操作数 op1=");
     ShowNum(op1);
@@ -44,7 +45,7 @@ int main() {
     rst = BigNum_MUL(op1, op2);
     printf("乘法结果：");
     ShowNum(rst);
-    rst = BigNum_DIV(op1, op2, 40); //tail 最多小数位数
+    rst = BigNum_DIV(op1, op2, 500); //tail 最多小数位数
     printf("除法结果：");
     ShowNum(rst);
 
